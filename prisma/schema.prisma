@@ -1,0 +1,93 @@
+generator client {
+  provider = "prisma-client-js"
+  previewFeatures = ["clientExtensions", "postgresqlExtensions"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+  extensions      = [pgcrypto]
+}
+
+model booking {
+  id               String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  start_time       DateTime @db.Timestamp(6)
+  end_time         DateTime @db.Timestamp(6)
+  user_id          String   @db.Uuid
+  car_id           String   @db.Uuid
+  pickup_location  String?  @db.VarChar(255)
+  dropoff_location String?  @db.VarChar(255)
+  created_at       DateTime @default(now()) @db.Timestamp(6)
+  updated_at       DateTime @default(now()) @db.Timestamp(6)
+  car              car      @relation(fields: [car_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  user             user     @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model car {
+  id            String      @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  make          String      @db.VarChar(255)
+  model         String      @db.VarChar(255)
+  year          Int
+  color         String      @db.VarChar(255)
+  license_plate String      @db.VarChar(255)
+  availability  Boolean     @default(true)
+  created_at    DateTime    @default(now()) @db.Timestamp(6)
+  updated_at    DateTime    @default(now()) @db.Timestamp(6)
+  booking       booking[]
+  operation     operation[]
+}
+
+model company {
+  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  description String?  @db.VarChar(255)
+  address     String?  @db.VarChar(255)
+  city        String?  @db.VarChar(255)
+  state       String?  @db.VarChar(255)
+  zip_code    String?  @db.VarChar(10)
+  name        String   @db.VarChar(255)
+  created_at  DateTime @default(now()) @db.Timestamp(6)
+  updated_at  DateTime @default(now()) @db.Timestamp(6)
+  user_id     String   @db.Uuid
+  tenant_id   String   @db.VarChar(255)
+  user        user     @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model dashboard {
+  id                String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  user_id           String   @db.Uuid
+  total_bookings    Int?
+  total_cars        Int?
+  active_bookings   Int?
+  inactive_bookings Int?
+  created_at        DateTime @default(now()) @db.Timestamp(6)
+  updated_at        DateTime @default(now()) @db.Timestamp(6)
+  user              user     @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model operation {
+  id                String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  user_id           String   @db.Uuid
+  car_id            String   @db.Uuid
+  operation_type    String?  @db.VarChar(255)
+  operation_status  String?  @db.VarChar(255)
+  operation_details String?  @db.VarChar(255)
+  created_at        DateTime @default(now()) @db.Timestamp(6)
+  updated_at        DateTime @default(now()) @db.Timestamp(6)
+  car               car      @relation(fields: [car_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  user              user     @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model user {
+  id          String      @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  email       String      @unique @db.VarChar(255)
+  firstName   String?     @db.VarChar(255)
+  lastName    String?     @db.VarChar(255)
+  roq_user_id String      @db.VarChar(255)
+  tenant_id   String      @db.VarChar(255)
+  created_at  DateTime    @default(now()) @db.Timestamp(6)
+  updated_at  DateTime    @default(now()) @db.Timestamp(6)
+  booking     booking[]
+  company     company[]
+  dashboard   dashboard[]
+  operation   operation[]
+}
